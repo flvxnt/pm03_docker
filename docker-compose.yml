@@ -1,0 +1,39 @@
+services:
+  api:
+    build: .
+    container_name: sed_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./storage:/data/storage
+    depends_on:
+      - db
+  tests:
+    image: python:3.11-slim
+    container_name: sed_tests
+    depends_on:
+      - api
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - BASE_URL=http://api:8000
+    command: sh -c "pip install -r requirements.txt && pytest -q"
+
+
+  db:
+    image: postgres:16
+    container_name: sed_db
+    environment:
+      POSTGRES_DB: sed_db
+      POSTGRES_USER: sed_user
+      POSTGRES_PASSWORD: sed_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - sed_pgdata:/var/lib/postgresql/data
+
+volumes:
+  sed_pgdata:
